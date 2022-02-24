@@ -1,6 +1,3 @@
-from can import Message
-
-
 FRC_device_type = {
     0: "Broadcast Messages",
     1: "Robot Controller",
@@ -44,13 +41,13 @@ class FRCCanID:
     api_index: int
     device_number: int
 
-    def __init__(self, message: Message):
-        self.device_type = message.arbitration_id >> 24
-        self.manufacturer_code = message.arbitration_id >> 16 & 0xff
-        self.api = message.arbitration_id  # TODO: Find shift & bitmask
-        self.api_class = message.arbitration_id >> 10 & 0x3f
-        self.api_index = message.arbitration_id >> 6 & 0xf
-        self.device_number = message.arbitration_id & 0x1f
+    def __init__(self, arbitration_id: int):
+        self.device_type = arbitration_id >> 24
+        self.manufacturer_code = arbitration_id >> 16 & 0xff
+        self.api = arbitration_id >> 6 & 0x3ff
+        self.api_class = arbitration_id >> 10 & 0x3f
+        self.api_index = arbitration_id >> 6 & 0xf
+        self.device_number = arbitration_id & 0x1f
 
     def get_device_type(self) -> str:
         return FRC_device_type.get(self.device_type, "Reserved")
