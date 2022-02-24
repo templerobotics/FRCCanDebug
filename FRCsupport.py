@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from can import Message
 
 
 FRC_device_type = {
@@ -35,11 +35,25 @@ FRC_manufacturer = {
 }
 
 
-@dataclass
 class FRCCanID:
     """Class for keeping track of the FRC CAN ID Components"""
     device_type: int
     manufacturer_code: int
+    api: int
     api_class: int
     api_index: int
     device_number: int
+
+    def __init__(self, message: Message):
+        self.device_type = message.arbitration_id >> 24
+        self.manufacturer_code = message.arbitration_id >> 16 & 0xff
+        self.api = message.arbitration_id  # TODO: Find shift & bitmask
+        self.api_class = message.arbitration_id >> 10 & 0x3f
+        self.api_index = message.arbitration_id >> 6 & 0xf
+        self.device_number = message.arbitration_id & 0x1f
+
+    def get_device_type(self) -> str:
+        return FRC_device_type.get(self.device_type, "Reserved")
+
+    def get_manufacturer(self) -> str:
+        return FRC_manufacturer.get(self.manufacturer_code, "Reserved")
