@@ -1,6 +1,6 @@
 import can
 from FRCsupport import FRCCanID
-from REVsupport import REV_API_identifier
+from REVsupport import decode_rev_api
 
 
 if __name__ == '__main__':

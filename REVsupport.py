@@ -7,3 +7,8 @@ REV_API_identifier = {
     0x42: "Voltage Set",
     0x43: "Current Set"
 }
+
+
+def decode_rev_api(api: int) -> str:
+    return REV_API_identifier.get(api, "Unknown")
+
