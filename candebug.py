@@ -24,3 +24,6 @@ if __name__ == '__main__':
             if can_id.device_type == 2 and can_id.manufacturer_code == 5:
                 print(f"{'{:.6f}'.format(line['timestamp'])}: {can_id.get_device_type()} | {can_id.get_manufacturer()} "
                       f"| Device {f'{can_id.device_number:02}'} | {decode_rev_api(can_id.api)} | {line['data_string']}")
+            else:
+                print(f"{'{:.6f}'.format(line['timestamp'])}: {can_id.get_device_type()} | {can_id.get_manufacturer()} "
+                      f"| Device {f'{can_id.device_number:02}'} | {line['data_string']}")
