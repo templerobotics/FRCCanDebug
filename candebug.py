@@ -8,10 +8,9 @@ from REVsupport import decode_rev_api
 
 class TableListener(can.Listener):
 
-    def __init__(self, df: pd.DataFrame, stdscr, *args, **kwargs):
+    def __init__(self, df: pd.DataFrame, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.df = df
-        self.stdscr = stdscr
 
     def on_message_received(self, msg: can.Message) -> None:
         can_data = ' '.join([format(x, '02x') for x in msg.data])
@@ -32,14 +31,13 @@ def main(stdscr):
         stdscr.refresh()
         curses.napms(1000)
         df = pd.DataFrame(columns=["Device Type", "Manufacturer", "Device Number", "REV API", "Data"])
-        can_notifier = can.Notifier(can_bus, [TableListener(df, stdscr)])
+        can_notifier = can.Notifier(can_bus, [TableListener(df)])
         while True:
-            stdscr.erase()
             df.sort_values(['Device Number', "REV API"], inplace=True)
+            stdscr.erase()
             stdscr.addstr(df.to_string())
             stdscr.refresh()
             curses.napms(25)
-            pass
 
 
 if __name__ == '__main__':
