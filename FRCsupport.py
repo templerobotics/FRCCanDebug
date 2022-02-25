@@ -1,4 +1,4 @@
-FRC_device_type = {
+FRC_Device_Type = {
     0: "Broadcast Messages",
     1: "Robot Controller",
     2: "Motor Controller",
@@ -15,7 +15,7 @@ FRC_device_type = {
 }
 
 
-FRC_manufacturer = {
+FRC_Manufacturer = {
     0: "Broadcast",
     1: "NI",
     2: "Luminary Micro",
@@ -50,7 +50,7 @@ class FRCCanID:
         self.device_number = arbitration_id & 0x1f
 
     def get_device_type(self) -> str:
-        return FRC_device_type.get(self.device_type, "Reserved")
+        return FRC_Device_Type.get(self.device_type, "Reserved")
 
     def get_manufacturer(self) -> str:
-        return FRC_manufacturer.get(self.manufacturer_code, "Reserved")
+        return FRC_Manufacturer.get(self.manufacturer_code, "Reserved")
