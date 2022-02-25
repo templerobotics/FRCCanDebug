@@ -1,29 +1,46 @@
 import can
+import pandas as pd
+import curses
+
 from FRCsupport import FRCCanID
 from REVsupport import decode_rev_api
 
 
-def parse_log_line(line: str) -> dict:
-    split = line.split()
-    timestamp = float(split[0])
-    can_id = int(split[2][:-1], 16)
-    data_string = ' '.join(split[6:14])
-    data_hex = int(''.join(split[6:14]), 16)
-    return {'timestamp': timestamp, 'can_id': can_id, 'data_string': data_string, 'data_hex': data_hex}
+class TableListener(can.Listener):
+
+    def __init__(self, df: pd.DataFrame, stdscr, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.df = df
+        self.stdscr = stdscr
+
+    def on_message_received(self, msg: can.Message) -> None:
+        can_data = ' '.join([format(x, '02x') for x in msg.data])
+        if hex(msg.arbitration_id) not in self.df.index:
+            frc_can_id = FRCCanID(msg.arbitration_id)
+            self.df.loc[hex(msg.arbitration_id)] = [frc_can_id.get_device_type(), frc_can_id.get_manufacturer(),
+                                                    frc_can_id.device_number, decode_rev_api(frc_can_id.api), can_data]
+        else:
+            self.df.at[hex(msg.arbitration_id), "Data"] = can_data
+
+    def on_error(self, exc: Exception) -> None:
+        pass
+
+
+def main(stdscr):
+    with can.interface.Bus(bustype='socketcan', channel='can0', bitrate=1000000) as can_bus:
+        stdscr.addstr("Program started. Waiting 1 second")
+        stdscr.refresh()
+        curses.napms(1000)
+        df = pd.DataFrame(columns=["Device Type", "Manufacturer", "Device Number", "REV API", "Data"])
+        can_notifier = can.Notifier(can_bus, [TableListener(df, stdscr)])
+        while True:
+            stdscr.erase()
+            df.sort_values(['Device Number', "REV API"], inplace=True)
+            stdscr.addstr(df.to_string())
+            stdscr.refresh()
+            curses.napms(25)
+            pass
 
 
 if __name__ == '__main__':
-    # can_bus = can.interface.Bus(bustype='socketcan', channel='can0', bitrate=1000000)
-    # can_bus.shutdown()
-    with open("2-23-430pm-drivetest.asc", 'r') as can_file:
-        for i in range(0, 6):
-            can_file.readline()
-        for fline in can_file.readlines():
-            line = parse_log_line(fline)
-            can_id = FRCCanID(line['can_id'])
-            if can_id.device_type == 2 and can_id.manufacturer_code == 5:
-                print(f"{'{:.6f}'.format(line['timestamp'])}: {can_id.get_device_type()} | {can_id.get_manufacturer()} "
-                      f"| Device {f'{can_id.device_number:02}'} | {decode_rev_api(can_id.api)} | {line['data_string']}")
-            else:
-                print(f"{'{:.6f}'.format(line['timestamp'])}: {can_id.get_device_type()} | {can_id.get_manufacturer()} "
-                      f"| Device {f'{can_id.device_number:02}'} | {line['data_string']}")
+    curses.wrapper(main)
