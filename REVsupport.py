@@ -1,3 +1,5 @@
+import struct
+
 REV_API_identifier = {
     0x1: "Setpoint Set",
     0x2: "DC Set",
@@ -65,3 +67,17 @@ def decode_rev_api(api: int) -> str:
 
 def decode_rev_fault(fault: int) -> str:
     return REV_Fault_IDs.get(fault, "Unknown")
+
+
+def decode_rev_data(api: int, data: bytes) -> str:
+    retval = "Unknown"
+    if api == 0x60:
+        output, = struct.unpack('h6x', data)
+        retval = f"Applied Output: {output}"
+    elif api == 0x61:
+        vel, temp = struct.unpack('fb3x', data)
+        retval = f"Motor Velocity: {vel} | Motor Temperature: {temp}C/{(temp*1.8)+32}F"
+    elif api == 0x62:
+        pos, _ = struct.unpack('2f', data)
+        retval = f"Motor Position: {pos}"
+    return retval
